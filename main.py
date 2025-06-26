@@ -82,4 +82,7 @@ def main():
         print(f"⚠️ Error: {e}")
 
 if __name__ == "__main__":
+    print("🌐 Starting rain check...")
     main()
+    print("✅ Script completed")
+
