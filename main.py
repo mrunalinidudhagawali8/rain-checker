@@ -10,12 +10,11 @@ PUSHBULLET_TOKEN = os.getenv("PUSHBULLET_TOKEN")
 LAT = "20.3734936678724"
 LON = "78.12452536561916"
 STATE_FILE = "rain_state.json"
-CHECK_INTERVAL_MINUTES = 10  # stays well below 900 API calls/day
 
 # ========== FUNCTIONS ==========
 
 def get_hourly_forecast():
-    url = f"https://api.openweathermap.org/data/3.0/onecall?lat={LAT}&lon={LON}&appid={OWM_API_KEY}"
+    url = f"https://api.openweathermap.org/data/3.0/onecall?lat={LAT}&lon={LON}&exclude=current,minutely,daily,alerts&appid={OWM_API_KEY}&units=metric"
     res = requests.get(url)
     res.raise_for_status()
     return res.json()["hourly"]
@@ -42,50 +41,48 @@ def send_push_notification(title, body):
     else:
         print(f"❌ Failed to send notification: {res.text}")
 
-# ========== MAIN LOOP ==========
+# ========== MAIN ==========
 
-def run_loop():
-    print("🌤️ Starting Rain Monitoring Loop")
-    while True:
-        try:
-            forecast = get_hourly_forecast()
-            rain_now = is_rain_in_next_hour(forecast)
-            state = load_rain_state()
-            now = datetime.now()
+def main():
+    try:
+        forecast = get_hourly_forecast()
+        rain_now = is_rain_in_next_hour(forecast)
+        state = load_rain_state()
+        now = datetime.now()
 
-            if rain_now:
-                if not state["raining"]:
-                    # Rain just started
-                    state["raining"] = True
-                    state["start_time"] = now.isoformat()
-                    state["last_alert"] = now.isoformat()
-                    send_push_notification("🌧️ Rain Started", f"Rain started at your farm at {now.strftime('%Y-%m-%d %H:%M')}")
-                else:
-                    start_time = datetime.fromisoformat(state["start_time"])
-                    duration = now - start_time
-                    last_alert = datetime.fromisoformat(state["last_alert"])
-
-                    if duration > timedelta(hours=1) and last_alert < now - timedelta(hours=1):
-                        send_push_notification("🌧️ Still Raining", f"Rain has continued for {int(duration.total_seconds()/3600)} hour(s)")
-                        state["last_alert"] = now.isoformat()
-
-                    if duration > timedelta(hours=3) and last_alert < now - timedelta(hours=6):
-                        send_push_notification("🌧️ Long Rain", f"Rain has continued for over 3 hours. Last alert sent at {last_alert.strftime('%H:%M')}")
-                        state["last_alert"] = now.isoformat()
-
+        if rain_now:
+            if not state["raining"]:
+                # Rain just started
+                state["raining"] = True
+                state["start_time"] = now.isoformat()
+                state["last_alert"] = now.isoformat()
+                send_push_notification("🌧️ Rain Started",
+                    f"Rain started at your farm at {now.strftime('%Y-%m-%d %H:%M')}")
             else:
-                if state["raining"]:
-                    send_push_notification("☀️ Rain Stopped", f"Rain has stopped at your farm as of {now.strftime('%Y-%m-%d %H:%M')}")
-                    state = {"raining": False, "start_time": None, "last_alert": None}
+                start_time = datetime.fromisoformat(state["start_time"])
+                duration = now - start_time
+                last_alert = datetime.fromisoformat(state["last_alert"])
 
-            save_rain_state(state)
-            print(f"[{now.strftime('%H:%M')}] ✅ Checked forecast. Sleeping {CHECK_INTERVAL_MINUTES} min.\n")
+                if duration > timedelta(hours=1) and last_alert < now - timedelta(hours=1):
+                    send_push_notification("🌧️ Still Raining",
+                        f"Rain has continued for {int(duration.total_seconds()/3600)} hour(s)")
+                    state["last_alert"] = now.isoformat()
 
-        except Exception as e:
-            print(f"⚠️ Error: {e}")
+                if duration > timedelta(hours=3) and last_alert < now - timedelta(hours=6):
+                    send_push_notification("🌧️ Long Rain Alert",
+                        f"Rain has continued for over 3 hours. Last alert was at {last_alert.strftime('%H:%M')}")
+                    state["last_alert"] = now.isoformat()
 
-        time.sleep(CHECK_INTERVAL_MINUTES * 60)
+        else:
+            if state["raining"]:
+                send_push_notification("☀️ Rain Stopped",
+                    f"Rain has stopped at your farm as of {now.strftime('%Y-%m-%d %H:%M')}")
+                state = {"raining": False, "start_time": None, "last_alert": None}
 
-# ========== RUN ==========
+        save_rain_state(state)
+
+    except Exception as e:
+        print(f"⚠️ Error: {e}")
+
 if __name__ == "__main__":
-    run_loop()
+    main()
