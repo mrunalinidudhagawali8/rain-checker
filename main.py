@@ -5,8 +5,6 @@ from datetime import datetime, timedelta
 import os
 
 # ========== CONFIG ==========
-OWM_API_KEY = "34f13aa28a7e972cf4a845af5fe17ded"
-PUSHBULLET_TOKEN = "o.vf7AYrpxK3HJ1YalJfRzQwnPfPFQKrmu"
 LAT = "20.3734936678724"
 LON = "78.12452536561916"
 STATE_FILE = "rain_state.json"
