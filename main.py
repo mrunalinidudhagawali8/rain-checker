@@ -7,8 +7,8 @@ from datetime import datetime, timedelta
 # ========== CONFIG ==========
 OWM_API_KEY = os.getenv("OWM_API_KEY")
 PUSHBULLET_TOKEN = os.getenv("PUSHBULLET_TOKEN")
-LAT = "20.3734936678724"
-LON = "78.12452536561916"
+LAT = "20.462055502572074"
+LON = "78.27376256445771"
 STATE_FILE = "rain_state.json"
 
 def get_current_weather():
