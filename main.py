@@ -65,7 +65,7 @@ def main():
                 state["raining"] = True
                 state["start_time"] = now.isoformat()
                 state["last_alert"] = now.isoformat()
-                send_push_notification("🌧️ Rain Started", f"Rain started at your farm at {now.strftime('%Y-%m-%d %H:%M UTC')}")
+                send_push_notification("🌧️ Rain Started", f"Rain started at your farm at {to_ist(now)}")
             else:
                 start_time = datetime.fromisoformat(state["start_time"])
                 last_alert = datetime.fromisoformat(state["last_alert"])
@@ -76,12 +76,12 @@ def main():
                     send_push_notification("🌧️ Still Raining", f"Rain has continued for {int(duration.total_seconds() / 3600)} hour(s)")
                     state["last_alert"] = now.isoformat()
                 elif duration > timedelta(hours=3) and since_alert >= timedelta(hours=6):
-                    send_push_notification("🌧️ Long Rain Alert", f"Rain has continued for more than 3 hours. Last alert at {last_alert.strftime('%H:%M UTC')}")
+                    send_push_notification("🌧️ Long Rain Alert", f"Rain has continued for more than 3 hours. Last alert at {to_ist(now)}")
                     state["last_alert"] = now.isoformat()
 
         else:
             if state["raining"]:
-                send_push_notification("☀️ Rain Stopped", f"Rain stopped at your farm at {now.strftime('%Y-%m-%d %H:%M UTC')}")
+                send_push_notification("☀️ Rain Stopped", f"Rain stopped at your farm at {to_ist(now)}")
                 state = {"raining": False, "start_time": None, "last_alert": None}
 
         save_rain_state(state)
