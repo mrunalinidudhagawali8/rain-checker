@@ -2,6 +2,7 @@ import requests
 import json
 import os
 import subprocess
+import pytz
 from datetime import datetime, timedelta
 
 # ========== CONFIG ==========
@@ -11,6 +12,10 @@ LAT = "20.462055502572074"
 LON = "78.27376256445771"
 STATE_FILE = "rain_state.json"
 
+def to_ist(dt_utc):
+    ist = pytz.timezone('Asia/Kolkata')
+    return dt_utc.astimezone(ist).strftime('%Y-%m-%d %I:%M %p IST')
+    
 def get_current_weather():
     url = f"https://api.openweathermap.org/data/2.5/weather?lat={LAT}&lon={LON}&appid={OWM_API_KEY}&units=metric"
     res = requests.get(url)
